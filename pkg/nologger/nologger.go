@@ -15,3 +15,11 @@ func (nl *NoLogger) LogCopiedFile(f *os.FileInfo, originPath, copyPath string) e
 func (nl *NoLogger) LogShreddedFile(f *os.FileInfo, originPath string, err error) error {
 	return nil
 }
+
+func (nl *NoLogger) LogGenericError(err error) error {
+	return nil
+}
+
+func (nl *NoLogger) LogFailedCopy(originPath, copyPath string, err error) error {
+	return nil
+}
