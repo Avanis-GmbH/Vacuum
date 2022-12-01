@@ -3,7 +3,7 @@ package vacuum
 type OperationStats struct {
 	CopiedFiles uint
 	CopiedBytes uint
-	Errors      uint
+	Errors      []*error
 }
 
 func (o *OperationStats) Add(co *OperationStats) {
