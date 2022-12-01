@@ -6,10 +6,10 @@ import (
 )
 
 type CopyMachine struct {
-	copyJobs      []*CopyJob
-	jobStackMutes sync.Mutex
-	running       bool
-	Dry           bool
+	copyJobs          []*CopyJob
+	copyJobStackMutes sync.Mutex
+	running           bool
+	Dry               bool
 }
 
 type CopyJob struct {
@@ -36,6 +36,7 @@ func GetCopyMachine() *CopyMachine {
 
 func (qm *CopyMachine) EnqueueCopyJob(originalFullPath, copyFullPath string, shredOnFinish bool, finishCallback func(cj *CopyJob)) {
 
+	// Create copy job
 	cj := &CopyJob{
 		FromPath:       &originalFullPath,
 		ToPath:         &copyFullPath,
@@ -44,11 +45,13 @@ func (qm *CopyMachine) EnqueueCopyJob(originalFullPath, copyFullPath string, shr
 		FinishCallBack: finishCallback,
 	}
 
-	qm.jobStackMutes.Lock()
-	defer qm.jobStackMutes.Unlock()
+	// Append copy job to copy job stack
+	qm.copyJobStackMutes.Lock()
+	defer qm.copyJobStackMutes.Unlock()
 	qm.copyJobs = append(qm.copyJobs, cj)
 	fmt.Printf("Enqueued copy job %+v \n", cj)
 
+	// Start the queuemaster if it's not running
 	if !qm.running {
 		go qm.copyQueueMasterRoutine()
 	}
