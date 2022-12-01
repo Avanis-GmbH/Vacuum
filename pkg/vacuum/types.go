@@ -1,7 +1,9 @@
 package vacuum
 
 type OperationStats struct {
-	CopiedFiles uint
-	CopiedBytes uint
-	Errors      []*error
+	CopiedFiles  uint64
+	CopiedBytes  uint64
+	DeletedFiles uint64
+	DeletedBytes uint64
+	Errors       []*error
 }

@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/copymachine"
 	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/logging"
 )
 
@@ -99,6 +100,11 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 		//TODO rest
 
 	}
+
+}
+
+// TODO implement
+func copyJobFinishCallback(cj *copymachine.CopyJob) {
 
 }
 

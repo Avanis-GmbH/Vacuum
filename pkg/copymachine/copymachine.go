@@ -16,6 +16,7 @@ type CopyJob struct {
 	FromPath       *string
 	ToPath         *string
 	ShredOnFinish  bool
+	CoppiedBytes   uint64
 	CopyError      *error
 	FinishCallBack func(cj *CopyJob)
 }
