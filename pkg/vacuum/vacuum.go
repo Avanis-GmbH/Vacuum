@@ -16,7 +16,7 @@ var MIN_AGE_IN_YEARS = 11
 var TARGET_DIR string
 
 var copyJobsPlanned = 0
-var copyJobMutex sync.RWMutex
+var copyJobCountMutex sync.RWMutex
 
 var stats *OperationStats
 var statsMutex sync.Mutex
@@ -106,6 +106,24 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 // TODO implement
 func copyJobFinishCallback(cj *copymachine.CopyJob) {
 
+	// Update statistics
+	statsMutex.Lock()
+	stats.CopiedBytes += cj.CopiedBytes
+	stats.CopiedFiles++
+	if cj.CopyError != nil {
+		stats.Errors = append(stats.Errors, cj.CopyError)
+	}
+	statsMutex.Unlock()
+
+	// Shred original if enabled
+	if SHRED_ORIGINAL {
+		// TODO shred original
+	}
+
+	// Update copy jobs planned counter
+	copyJobCountMutex.Lock()
+	copyJobsPlanned--
+	copyJobCountMutex.Unlock()
 }
 
 func appendErrorToStatistics(err *error) {
