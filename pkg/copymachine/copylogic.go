@@ -30,7 +30,7 @@ func (cm *CopyMachine) copyQueueMasterRoutine() {
 
 //TODO implement
 func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
-	err := fmt.Errorf("not implemented")
+	err := fmt.Errorf("could not copy file from %+v to %+v: not implemented", *cj.FromPath, *cj.ToPath)
 	cj.CopyError = &err
 
 	cj.FinishCallBack(cj)
