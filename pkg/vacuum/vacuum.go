@@ -22,6 +22,8 @@ var copyJobCountMutex sync.RWMutex
 var stats *OperationStats
 var statsMutex sync.Mutex
 
+var logger logging.Logger
+
 func PerformCleaning(rootDir string, log logging.Logger) *OperationStats {
 	fmt.Printf("Cleaning directory %v", rootDir)
 
@@ -29,13 +31,14 @@ func PerformCleaning(rootDir string, log logging.Logger) *OperationStats {
 	if copyJobsPlanned > 0 {
 		errs := make([]*error, 1)
 		err := fmt.Errorf("can't perform cleaning while copy jobs are still running")
-		log.LogGenericError(err)
 		errs[0] = &err
 
 		return &OperationStats{
 			Errors: errs,
 		}
 	}
+
+	logger = log
 
 	copymachine.GetCopyMachine().Dry = DRY_RUN
 
@@ -64,7 +67,7 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 	entries, err := os.ReadDir(filepath.Join(rootDir, branchDir))
 	if err != nil {
 		err = fmt.Errorf("could not read directory %v: %v", filepath.Join(rootDir, branchDir), err.Error())
-		log.LogGenericError(err)
+		logger.LogGenericError(err)
 		appendErrorToStatistics(&err)
 	}
 
@@ -84,7 +87,7 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 		fInfo, err := f.Info()
 		if err != nil {
 			err = fmt.Errorf("could not obtain fileinfo for file %+v: %v", f.Name(), err.Error())
-			log.LogGenericError(err)
+			logger.LogGenericError(err)
 			appendErrorToStatistics(&err)
 			continue
 		}
@@ -98,7 +101,7 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 
 		// Enqueue the copy job
 		fmt.Printf("File %v in %v is older than %v years: %v", fInfo.Name(), filepath.Join(rootDir, branchDir), fmt.Sprint(MIN_AGE_IN_YEARS), fInfo.ModTime())
-		log.LogOldFile(&fInfo, uint(MIN_AGE_IN_YEARS)-1)
+		logger.LogOldFile(&fInfo, uint(MIN_AGE_IN_YEARS)-1)
 		copymachine.GetCopyMachine().EnqueueCopyJob(filepath.Join(rootDir, branchDir, fInfo.Name()), filepath.Join(TARGET_DIR, branchDir, fInfo.Name()), SHRED_ORIGINAL, copyJobFinishCallback)
 		copyJobCountMutex.Lock()
 		copyJobsPlanned++
@@ -107,17 +110,18 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 
 }
 
-// TODO implement
 func copyJobFinishCallback(cj *copymachine.CopyJob) {
 
 	// Update statistics
 	statsMutex.Lock()
-	//TODO log
+
 	if cj.CopyError != nil {
 		stats.Errors = append(stats.Errors, cj.CopyError)
+		logger.LogFailedCopy(*cj.FromPath, *cj.ToPath, *cj.CopyError)
 	} else {
 		stats.CopiedBytes += cj.CopiedBytes
 		stats.CopiedFiles++
+		logger.LogCopiedFile(*cj.FromPath, *cj.ToPath, cj.CopiedBytes)
 	}
 	statsMutex.Unlock()
 
@@ -132,11 +136,12 @@ func copyJobFinishCallback(cj *copymachine.CopyJob) {
 
 		// Update statistics
 		statsMutex.Lock()
-		//TODO log
 		if err != nil {
 			stats.Errors = append(stats.Errors, &err)
+			logger.LogFailedShred(*cj.FromPath, err)
 		} else {
 			stats.DeletedFiles++
+			logger.LogShreddedFile(*cj.FromPath)
 		}
 
 		statsMutex.Unlock()
