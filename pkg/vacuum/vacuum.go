@@ -174,7 +174,6 @@ func checkAndDeleteEmptyDirectoryTree(treeLeafPath string) {
 	if len(entries) == 0 {
 		shredDir = true
 	} else if len(entries) == 1 {
-		fmt.Printf("%v\n", entries[0].Name())
 
 		if entries[0].Name() == "Thumbs.db" {
 			err = os.Remove(filepath.Join(treeLeafPath, "Thumbs.db"))
