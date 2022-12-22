@@ -33,8 +33,6 @@ func (cm *CopyMachine) copyQueueMasterRoutine() {
 }
 
 func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
-	err := fmt.Errorf("could not copy file from %+v to %+v: %v", *cj.FromPath, *cj.ToPath, err.Error())
-	cj.CopyError = &err
 
 	// Open the source file
 	sourceF, err := os.Open(*cj.FromPath)
