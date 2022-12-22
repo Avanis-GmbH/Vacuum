@@ -1,6 +1,10 @@
 package copymachine
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+	"os"
+)
 
 func (cm *CopyMachine) copyQueueMasterRoutine() {
 	cm.running = true
@@ -28,10 +32,46 @@ func (cm *CopyMachine) copyQueueMasterRoutine() {
 	cm.running = false
 }
 
-//TODO implement
 func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
-	err := fmt.Errorf("could not copy file from %+v to %+v: not implemented", *cj.FromPath, *cj.ToPath)
+	err := fmt.Errorf("could not copy file from %+v to %+v: %v", *cj.FromPath, *cj.ToPath, err.Error())
 	cj.CopyError = &err
+
+	// Open the source file
+	sourceF, err := os.Open(*cj.FromPath)
+	if err != nil {
+		cErr := fmt.Errorf("could not copy file from %+v to %+v: %v", *cj.FromPath, *cj.ToPath, err.Error())
+		cj.CopyError = &cErr
+		cj.FinishCallBack(cj)
+		return
+	}
+	defer sourceF.Close()
+
+	// Create the destination file if not exist
+	destF, err := os.Create(*cj.ToPath)
+	if err != nil {
+		cErr := fmt.Errorf("could not copy file from %+v to %+v: %v", *cj.FromPath, *cj.ToPath, err.Error())
+		cj.CopyError = &cErr
+		cj.FinishCallBack(cj)
+		return
+	}
+	defer destF.Close()
+
+	// Copy the file content
+	copBytes, err := io.Copy(destF, sourceF)
+	if err != nil {
+		cErr := fmt.Errorf("could not copy file from %+v to %+v: %v", *cj.FromPath, *cj.ToPath, err.Error())
+		cj.CopyError = &cErr
+		cj.CopiedBytes = uint64(copBytes)
+		cj.FinishCallBack(cj)
+		return
+	}
+
+	// Finalize the copy job
+	err = destF.Sync()
+	if err != nil {
+		cErr := fmt.Errorf("could not copy file from %+v to %+v: %v", *cj.FromPath, *cj.ToPath, err.Error())
+		cj.CopyError = &cErr
+	}
 
 	cj.FinishCallBack(cj)
 }
