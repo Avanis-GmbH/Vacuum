@@ -9,7 +9,6 @@ import (
 
 	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/copymachine"
 	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/logging"
-	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/shredder"
 )
 
 var RECURSIVE, DRY_RUN, SHRED_ORIGINAL, NO_PROTOCOL bool
@@ -131,7 +130,7 @@ func copyJobFinishCallback(cj *copymachine.CopyJob) {
 		// Only shred the file if this is not a dry run
 		var err error
 		if !DRY_RUN {
-			err = shredder.Shred(*cj.FromPath)
+			err = os.Remove(*cj.FromPath)
 		}
 
 		// Update statistics
