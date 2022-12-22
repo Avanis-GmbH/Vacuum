@@ -1,7 +1,6 @@
 package copymachine
 
 import (
-	"fmt"
 	"io"
 	"os"
 )
@@ -37,8 +36,7 @@ func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
 	// Open the source file
 	sourceF, err := os.Open(*cj.FromPath)
 	if err != nil {
-		cErr := fmt.Errorf("could not copy file from %+v to %+v: %v", *cj.FromPath, *cj.ToPath, err.Error())
-		cj.CopyError = &cErr
+		cj.CopyError = &err
 		cj.FinishCallBack(cj)
 		return
 	}
@@ -47,8 +45,7 @@ func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
 	// Create the destination file if not exist
 	destF, err := os.Create(*cj.ToPath)
 	if err != nil {
-		cErr := fmt.Errorf("could not copy file from %+v to %+v: %v", *cj.FromPath, *cj.ToPath, err.Error())
-		cj.CopyError = &cErr
+		cj.CopyError = &err
 		cj.FinishCallBack(cj)
 		return
 	}
@@ -57,8 +54,7 @@ func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
 	// Copy the file content
 	copBytes, err := io.Copy(destF, sourceF)
 	if err != nil {
-		cErr := fmt.Errorf("could not copy file from %+v to %+v: %v", *cj.FromPath, *cj.ToPath, err.Error())
-		cj.CopyError = &cErr
+		cj.CopyError = &err
 		cj.CopiedBytes = uint64(copBytes)
 		cj.FinishCallBack(cj)
 		return
@@ -67,8 +63,7 @@ func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
 	// Finalize the copy job
 	err = destF.Sync()
 	if err != nil {
-		cErr := fmt.Errorf("could not copy file from %+v to %+v: %v", *cj.FromPath, *cj.ToPath, err.Error())
-		cj.CopyError = &cErr
+		cj.CopyError = &err
 	}
 
 	cj.FinishCallBack(cj)
