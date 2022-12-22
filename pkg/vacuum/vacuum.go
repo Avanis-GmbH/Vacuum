@@ -99,17 +99,24 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 		}
 
 		// Enqueue the copy job
-		fmt.Printf("File %v in %v is older than %v years: %v", fInfo.Name(), filepath.Join(rootDir, branchDir), fmt.Sprint(MIN_AGE_IN_YEARS), fInfo.ModTime())
-		logger.LogOldFile(&fInfo, uint(MIN_AGE_IN_YEARS)-1)
+		fmt.Printf("File %v in %v is older than %v years: %v \n", fInfo.Name(), filepath.Join(rootDir, branchDir), fmt.Sprint(MIN_AGE_IN_YEARS), fInfo.ModTime())
+		logger.LogOldFile(fInfo, uint(MIN_AGE_IN_YEARS)-1)
 		copymachine.GetCopyMachine().EnqueueCopyJob(filepath.Join(rootDir, branchDir, fInfo.Name()), filepath.Join(TARGET_DIR, branchDir, fInfo.Name()), SHRED_ORIGINAL, copyJobFinishCallback)
 		copyJobCountMutex.Lock()
 		copyJobsEnqueued++
+		fmt.Println(fmt.Sprint(copyJobsEnqueued))
 		copyJobCountMutex.Unlock()
 	}
 
 }
 
 func copyJobFinishCallback(cj *copymachine.CopyJob) {
+
+	// Update copy jobs planned counter
+	copyJobCountMutex.Lock()
+	copyJobsEnqueued--
+	fmt.Println(fmt.Sprint(copyJobsEnqueued))
+	copyJobCountMutex.Unlock()
 
 	// Update statistics
 	statsMutex.Lock()
@@ -146,10 +153,6 @@ func copyJobFinishCallback(cj *copymachine.CopyJob) {
 		statsMutex.Unlock()
 	}
 
-	// Update copy jobs planned counter
-	copyJobCountMutex.Lock()
-	copyJobsEnqueued--
-	copyJobCountMutex.Unlock()
 }
 
 func appendErrorToStatistics(err *error) {
