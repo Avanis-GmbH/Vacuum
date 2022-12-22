@@ -36,8 +36,6 @@ func (cm *CopyMachine) copyQueueMasterRoutine() {
 
 func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
 
-	fmt.Printf("Performing copyjob %+v \n", cj)
-
 	// Abort without any errors when doing a dry run
 	if cm.Dry {
 		cj.FinishCallBack(cj)
@@ -78,6 +76,7 @@ func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
 		cj.FinishCallBack(cj)
 		return
 	}
+	cj.CopiedBytes = uint64(copBytes)
 
 	// Finalize the copy job
 	err = destF.Sync()
