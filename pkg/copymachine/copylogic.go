@@ -33,6 +33,12 @@ func (cm *CopyMachine) copyQueueMasterRoutine() {
 
 func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
 
+	// Abort without any errors when doing a dry run
+	if cm.Dry {
+		cj.FinishCallBack(cj)
+		return
+	}
+
 	// Open the source file
 	sourceF, err := os.Open(*cj.FromPath)
 	if err != nil {
