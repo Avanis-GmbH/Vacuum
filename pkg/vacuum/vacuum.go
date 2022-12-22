@@ -138,6 +138,7 @@ func copyJobFinishCallback(cj *copymachine.CopyJob) {
 		var err error
 		if !DRY_RUN {
 			err = os.Remove(*cj.FromPath)
+			checkAndDeleteEmptyDirectoryTree(filepath.Dir(*cj.FromPath))
 		}
 
 		// Update statistics
@@ -159,4 +160,39 @@ func appendErrorToStatistics(err *error) {
 	statsMutex.Lock()
 	stats.Errors = append(stats.Errors, err)
 	statsMutex.Unlock()
+}
+
+func checkAndDeleteEmptyDirectoryTree(treeLeafPath string) {
+	// Check if the directory is empty after the deletion and delete it if it's empty
+	entries, err := os.ReadDir(treeLeafPath)
+	if err != nil {
+		logger.LogGenericError(err)
+	}
+
+	// Check if directory is empty or only has thumbs db (and delete thumbs db)
+	shredDir := false
+	if len(entries) == 0 {
+		shredDir = true
+	} else if len(entries) == 1 {
+		fmt.Printf("%v\n", entries[0].Name())
+
+		if entries[0].Name() == "Thumbs.db" {
+			err = os.Remove(filepath.Join(treeLeafPath, "Thumbs.db"))
+			if err != nil {
+				logger.LogFailedShred(treeLeafPath, err)
+			} else {
+				shredDir = true
+			}
+		}
+	}
+
+	// Delete directory if it's empty
+	if shredDir {
+		err = os.Remove(treeLeafPath)
+		if err != nil {
+			logger.LogFailedShred(treeLeafPath, err)
+		}
+
+		checkAndDeleteEmptyDirectoryTree(filepath.Dir(treeLeafPath))
+	}
 }
