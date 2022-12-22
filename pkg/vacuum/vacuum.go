@@ -16,7 +16,7 @@ var RECURSIVE, DRY_RUN, SHRED_ORIGINAL, NO_PROTOCOL bool
 var MIN_AGE_IN_YEARS = 11
 var TARGET_DIR string
 
-var copyJobsPlanned = 0
+var copyJobsEnqueued = 0
 var copyJobCountMutex sync.RWMutex
 
 var stats *OperationStats
@@ -28,7 +28,7 @@ func PerformCleaning(rootDir string, log logging.Logger) *OperationStats {
 	fmt.Printf("Cleaning directory %v", rootDir)
 
 	// Abort if copy jobs are still running
-	if copyJobsPlanned > 0 {
+	if copyJobsEnqueued > 0 {
 		errs := make([]*error, 1)
 		err := fmt.Errorf("can't perform cleaning while copy jobs are still running")
 		errs[0] = &err
@@ -53,8 +53,8 @@ func PerformCleaning(rootDir string, log logging.Logger) *OperationStats {
 	cleanDirectory(rootDir, "", log)
 
 	// Wait for every planned copy job to complete
-	for copyJobsPlanned > 0 {
-		fmt.Printf("Copy jobs running: %v \n", copyJobsPlanned)
+	for copyJobsEnqueued > 0 {
+		fmt.Printf("Copy jobs running: %v \n", copyJobsEnqueued)
 		time.Sleep(time.Second)
 	}
 
@@ -104,7 +104,7 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 		logger.LogOldFile(&fInfo, uint(MIN_AGE_IN_YEARS)-1)
 		copymachine.GetCopyMachine().EnqueueCopyJob(filepath.Join(rootDir, branchDir, fInfo.Name()), filepath.Join(TARGET_DIR, branchDir, fInfo.Name()), SHRED_ORIGINAL, copyJobFinishCallback)
 		copyJobCountMutex.Lock()
-		copyJobsPlanned++
+		copyJobsEnqueued++
 		copyJobCountMutex.Unlock()
 	}
 
@@ -149,7 +149,7 @@ func copyJobFinishCallback(cj *copymachine.CopyJob) {
 
 	// Update copy jobs planned counter
 	copyJobCountMutex.Lock()
-	copyJobsPlanned--
+	copyJobsEnqueued--
 	copyJobCountMutex.Unlock()
 }
 
