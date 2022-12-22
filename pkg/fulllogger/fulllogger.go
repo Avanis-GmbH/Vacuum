@@ -78,7 +78,7 @@ func (fl *FullLogger) LogOldFile(f os.FileInfo, maxAgeInYears uint) {
 		return
 	}
 
-	_, err := fl.oldFileLog.WriteString("Found file " + f.Name() + " being older than " + fmt.Sprint(maxAgeInYears) + "\n")
+	_, err := fl.oldFileLog.WriteString("Found file " + f.Name() + " being older than " + fmt.Sprint(maxAgeInYears) + " years \n")
 	if err != nil {
 		fmt.Println("Could not write to old file log: " + err.Error())
 	}
