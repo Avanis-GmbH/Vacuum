@@ -11,7 +11,7 @@ import (
 	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/logging"
 )
 
-var RECURSIVE, DRY_RUN, SHRED_ORIGINAL, NO_PROTOCOL bool
+var RECURSIVE, DRY_RUN, SHRED_ORIGINAL bool
 var MIN_AGE_IN_YEARS = 11
 var TARGET_DIR string
 
@@ -53,7 +53,6 @@ func PerformCleaning(rootDir string, log logging.Logger) *OperationStats {
 
 	// Wait for every planned copy job to complete
 	for copyJobsEnqueued > 0 {
-		fmt.Printf("Copy jobs running: %v \n", copyJobsEnqueued)
 		time.Sleep(time.Second)
 	}
 
