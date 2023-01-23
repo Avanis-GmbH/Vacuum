@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/copymachine"
-	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/logging"
+	"github.com/Avanis-GmbH/Go-Dust-Vacuum/pkg/copymachine"
+	"github.com/Avanis-GmbH/Go-Dust-Vacuum/pkg/logging"
 )
 
 var RECURSIVE, DRY_RUN, SHRED_ORIGINAL bool

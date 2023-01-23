@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/fulllogger"
-	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/logging"
-	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/nologger"
-	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/vacuum"
+	"github.com/Avanis-GmbH/Go-Dust-Vacuum/pkg/fulllogger"
+	"github.com/Avanis-GmbH/Go-Dust-Vacuum/pkg/logging"
+	"github.com/Avanis-GmbH/Go-Dust-Vacuum/pkg/nologger"
+	"github.com/Avanis-GmbH/Go-Dust-Vacuum/pkg/vacuum"
 )
 
 const VERSION = "1.0.0-beta"
@@ -36,6 +36,29 @@ func main() {
 		}
 	} else {
 		l = &nologger.NoLogger{}
+	}
+
+	if vacuum.MIN_AGE_IN_YEARS < 0 {
+		l.LogGenericError(fmt.Errorf("minimum age cannot be lower than 0 years! Parsed value: %v", vacuum.MIN_AGE_IN_YEARS))
+		os.Exit(1)
+	}
+
+	if vacuum.MIN_AGE_IN_YEARS == 0 {
+		fmt.Println("=====================================================================")
+		fmt.Println(">>>ATTENTION! SETTING THE MINIMUM FILE AGE TO 0 WOULD AFFECT EVERY FILE IN THE ROOT DIRECTORY!<<<")
+		fmt.Printf("===================================================================== \n\n")
+		fmt.Println("Do you want to continue? (Type 'yes' to continue. Any other input will exit the software)")
+		var answer string
+		_, err := fmt.Scanln(&answer)
+		if err != nil {
+			panic(err)
+		}
+
+		if answer != "yes" {
+			fmt.Println("Aborted!")
+		}
+
+		fmt.Println("Continuing despite warning...")
 	}
 
 	s := vacuum.PerformCleaning(rootDir, l)
