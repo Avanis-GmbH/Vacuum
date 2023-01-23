@@ -42,7 +42,6 @@ func main() {
 
 	l.Finish()
 
-	fmt.Printf("%+v \n", s)
 	fmt.Printf("Finished process with following statistics: \n")
 	fmt.Printf("Copied files: %v \n", s.CopiedFiles)
 	fmt.Printf("Copied bytes: %v \n", s.CopiedBytes)

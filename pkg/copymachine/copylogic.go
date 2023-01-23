@@ -9,11 +9,13 @@ import (
 
 func (cm *CopyMachine) copyQueueMasterRoutine() {
 	cm.running = true
-
+	cm.copyJobStackMutes.Lock()
 	// Get the amount of current queued jobs
 	jobAmount := len(cm.copyJobs)
+	cm.copyJobStackMutes.Unlock()
 
 	for jobAmount > 0 {
+
 		cm.copyJobStackMutes.Lock()
 		jobAmount = len(cm.copyJobs)
 		cj := cm.copyJobs[0]
