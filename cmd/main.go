@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/Avanis-GmbH/Go-Dust-Vacuum/pkg/fulllogger"
 	"github.com/Avanis-GmbH/Go-Dust-Vacuum/pkg/logging"
@@ -54,7 +55,7 @@ func main() {
 			panic(err)
 		}
 
-		if answer != "yes" {
+		if strings.TrimSpace(answer) != "yes" {
 			fmt.Println("Aborted!")
 		}
 
