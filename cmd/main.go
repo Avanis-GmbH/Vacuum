@@ -27,6 +27,12 @@ func main() {
 		os.Exit(0)
 	}
 
+	if strings.TrimSpace(rootDir) == "" || strings.TrimSpace(vacuum.TargetDir) == "" {
+		fmt.Println("Flags root-dir and target-dir must be defined!")
+		showHelp()
+		os.Exit(1)
+	}
+
 	// Set up logging
 	var l logging.Logger
 	l = &nologger.NoLogger{}
@@ -86,11 +92,11 @@ func parseFlags() {
 	flag.BoolVar(&vacuum.Recursive, "r", false, "Should all subdirectories be included.")
 	flag.BoolVar(&vacuum.DryRun, "dry", false, "Should the application perform a dry run without any io operations?")
 	flag.BoolVar(&vacuum.ShredOriginal, "shred", false, "Should the original file get deleted after copy?")
-	flag.IntVar(&vacuum.MinAgeInYears, "older-than", 11, "How old the last edit of a file should be (in years) to consider it for archiving.")
+	flag.IntVar(&vacuum.MinAgeInYears, "min-age", 11, "How old the last edit of a file should be (in years) to consider it for archiving.")
 	flag.BoolVar(&runHelp, "help", false, "Shows usage information about this software")
 	flag.BoolVar(&noLog, "nolog", false, "If no log files should be written for the process. Use at own risk only!")
-	flag.StringVar(&rootDir, "root-dir", ">INVALID<", "The root directory which should be scanned for old files. [REQUIRED]")
-	flag.StringVar(&vacuum.TargetDir, "target-dir", ">INVALID<", "The target directory where the old files should be copied to. [REQUIRED]")
+	flag.StringVar(&rootDir, "root-dir", "", "The root directory which should be scanned for old files. [REQUIRED]")
+	flag.StringVar(&vacuum.TargetDir, "target-dir", "", "The target directory where the old files should be copied to. [REQUIRED]")
 	flag.Parse()
 }
 
@@ -98,7 +104,7 @@ func showHelp() {
 	fmt.Println(`
 Scans a chosen root directory for old files and copies them to a target directory for archiving.
 
-Usage: \ngo-dust-vacuum -root-dir=<root directory> -target-dir=<target directory> [additional flags]
+Usage: go-dust-vacuum -root-dir=<root directory> -target-dir=<target directory> [additional flags]
 Available flags:
 	`)
 	flag.PrintDefaults()
