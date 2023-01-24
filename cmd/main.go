@@ -76,7 +76,7 @@ func main() {
 func showStartupBanner() {
 	fmt.Println("=============================================================")
 	fmt.Printf("Go Dust Vacuum v%v - Created by Simon Nils Rach \n", VERSION)
-	fmt.Printf("=============================================================\n\n")
+	fmt.Printf("=============================================================\n")
 }
 
 func parseFlags() {
@@ -95,9 +95,11 @@ func parseFlags() {
 }
 
 func showHelp() {
-	fmt.Printf("Scans a chosen root directory for old files and copies them to a target directory for archiving. \n \n")
+	fmt.Println(`
+Scans a chosen root directory for old files and copies them to a target directory for archiving.
 
-	fmt.Printf("Usage: \ngo-dust-vacuum -root-dir=<root directory> -target-dir=<target directory> [additional flags]\n \n")
-	fmt.Printf("Available flags: \n")
+Usage: \ngo-dust-vacuum -root-dir=<root directory> -target-dir=<target directory> [additional flags]
+Available flags:
+	`)
 	flag.PrintDefaults()
 }
