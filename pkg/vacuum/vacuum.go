@@ -103,7 +103,7 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 		copymachine.GetCopyMachine().EnqueueCopyJob(filepath.Join(rootDir, branchDir, fInfo.Name()), filepath.Join(TargetDir, branchDir, fInfo.Name()), ShredOriginal, copyJobFinishCallback)
 		copyJobCountMutex.Lock()
 		copyJobsEnqueued++
-		fmt.Println(fmt.Sprint(copyJobsEnqueued))
+		fmt.Printf("%v\n", copyJobsEnqueued)
 		copyJobCountMutex.Unlock()
 	}
 
