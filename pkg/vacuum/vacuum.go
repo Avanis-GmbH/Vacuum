@@ -24,7 +24,7 @@ var statsMutex sync.Mutex
 var logger logging.Logger
 
 func PerformCleaning(rootDir string, log logging.Logger) *OperationStats {
-	fmt.Printf("Cleaning directory %v", rootDir)
+	fmt.Printf("Cleaning directory %v\n", rootDir)
 
 	// Abort if copy jobs are still running
 	if copyJobsEnqueued > 0 {
