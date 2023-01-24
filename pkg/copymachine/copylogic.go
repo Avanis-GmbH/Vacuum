@@ -15,7 +15,6 @@ func (cm *CopyMachine) copyQueueMasterRoutine() {
 	cm.copyJobStackMutes.Unlock()
 
 	for jobAmount > 0 {
-
 		cm.copyJobStackMutes.Lock()
 		jobAmount = len(cm.copyJobs)
 		cj := cm.copyJobs[0]
@@ -37,7 +36,6 @@ func (cm *CopyMachine) copyQueueMasterRoutine() {
 }
 
 func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
-
 	// Abort without any errors when doing a dry run
 	if cm.Dry {
 		cj.FinishCallBack(cj)

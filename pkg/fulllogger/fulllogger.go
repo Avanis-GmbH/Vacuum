@@ -1,7 +1,5 @@
 package fulllogger
 
-//TODO implement
-
 import (
 	"fmt"
 	"os"
