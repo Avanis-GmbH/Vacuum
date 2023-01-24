@@ -10,25 +10,19 @@ import (
 func (cm *CopyMachine) copyQueueMasterRoutine() {
 	cm.running = true
 	cm.copyJobStackMutes.Lock()
-	// Get the amount of current queued jobs
-	jobAmount := len(cm.copyJobs)
-	cm.copyJobStackMutes.Unlock()
+	defer cm.copyJobStackMutes.Unlock()
 
-	for jobAmount > 0 {
-		cm.copyJobStackMutes.Lock()
-		jobAmount = len(cm.copyJobs)
+	for len(cm.copyJobs) > 0 {
 		cj := cm.copyJobs[0]
 
-		if jobAmount == 1 {
+		if len(cm.copyJobs) == 1 {
 			cm.copyJobs = make([]*CopyJob, 0)
 		} else {
-			cm.copyJobs[0] = cm.copyJobs[jobAmount-1]
-			cm.copyJobs[jobAmount-1] = nil
-			cm.copyJobs = cm.copyJobs[:jobAmount-1]
+			cm.copyJobs[0] = cm.copyJobs[len(cm.copyJobs)-1]
+			cm.copyJobs[len(cm.copyJobs)-1] = nil
+			cm.copyJobs = cm.copyJobs[:len(cm.copyJobs)-1]
 		}
 
-		jobAmount = len(cm.copyJobs)
-		cm.copyJobStackMutes.Unlock()
 		cm.performCopyJob(cj)
 	}
 
