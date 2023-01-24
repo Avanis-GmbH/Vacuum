@@ -76,7 +76,7 @@ func (fl *FullLogger) LogOldFile(f os.FileInfo, maxAgeInYears uint) {
 		return
 	}
 
-	_, err := fl.oldFileLog.WriteString("Found file " + f.Name() + " being older than " + fmt.Sprint(maxAgeInYears) + " years \n")
+	_, err := fl.oldFileLog.WriteString(fmt.Sprint("Found file ", f.Name(), " being older than ", maxAgeInYears, " years \n"))
 	if err != nil {
 		fmt.Println("Could not write to old file log: " + err.Error())
 	}
@@ -88,7 +88,7 @@ func (fl *FullLogger) LogCopiedFile(originPath, copyPath string, copiedBytes uin
 		return
 	}
 
-	_, err := fl.copiedFileLog.WriteString("Copied " + fmt.Sprint(copiedBytes) + " bytes from " + originPath + " to " + copyPath + "\n")
+	_, err := fl.copiedFileLog.WriteString(fmt.Sprint("Copied ", copiedBytes, " bytes from ", originPath, " to ", copyPath, "\n"))
 	if err != nil {
 		fmt.Println("Could not write to copied file log: " + err.Error())
 	}
