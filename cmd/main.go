@@ -29,14 +29,13 @@ func main() {
 
 	// Set up logging
 	var l logging.Logger
+	l = &nologger.NoLogger{}
 	if !noLog {
 		l = &fulllogger.FullLogger{}
 		err := l.Init()
 		if err != nil {
 			panic(err)
 		}
-	} else {
-		l = &nologger.NoLogger{}
 	}
 
 	if vacuum.MinAgeInYears < 0 {
