@@ -1,7 +1,6 @@
 package copymachine
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -50,7 +49,6 @@ func (qm *CopyMachine) EnqueueCopyJob(originalFullPath, copyFullPath string, shr
 	qm.copyJobStackMutes.Lock()
 	defer qm.copyJobStackMutes.Unlock()
 	qm.copyJobs = append(qm.copyJobs, cj)
-	fmt.Printf("Enqueued copy job %+v \n", cj)
 
 	// Start the queuemaster if it's not running
 	if !qm.running {

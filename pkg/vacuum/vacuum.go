@@ -7,16 +7,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/copymachine"
-	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/logging"
-	"github.com/Avanis_GmbH/Go-Dust-Vacuum/pkg/shredder"
+	"github.com/Avanis-GmbH/Go-Dust-Vacuum/pkg/copymachine"
+	"github.com/Avanis-GmbH/Go-Dust-Vacuum/pkg/logging"
 )
 
-var RECURSIVE, DRY_RUN, SHRED_ORIGINAL, NO_PROTOCOL bool
-var MIN_AGE_IN_YEARS = 11
-var TARGET_DIR string
+var Recursive, DryRun, ShredOriginal bool
+var MinAgeInYears = 11
+var TargetDir string
 
-var copyJobsPlanned = 0
+var copyJobsEnqueued = 0
 var copyJobCountMutex sync.RWMutex
 
 var stats *OperationStats
@@ -25,10 +24,10 @@ var statsMutex sync.Mutex
 var logger logging.Logger
 
 func PerformCleaning(rootDir string, log logging.Logger) *OperationStats {
-	fmt.Printf("Cleaning directory %v", rootDir)
+	fmt.Printf("Cleaning directory %v\n", rootDir)
 
 	// Abort if copy jobs are still running
-	if copyJobsPlanned > 0 {
+	if copyJobsEnqueued > 0 {
 		errs := make([]*error, 1)
 		err := fmt.Errorf("can't perform cleaning while copy jobs are still running")
 		errs[0] = &err
@@ -40,7 +39,7 @@ func PerformCleaning(rootDir string, log logging.Logger) *OperationStats {
 
 	logger = log
 
-	copymachine.GetCopyMachine().Dry = DRY_RUN
+	copymachine.GetCopyMachine().Dry = DryRun
 
 	// Lock the statistics object and recreate it
 	statsMutex.Lock()
@@ -53,8 +52,7 @@ func PerformCleaning(rootDir string, log logging.Logger) *OperationStats {
 	cleanDirectory(rootDir, "", log)
 
 	// Wait for every planned copy job to complete
-	for copyJobsPlanned > 0 {
-		fmt.Printf("Copy jobs running: %v \n", copyJobsPlanned)
+	for copyJobsEnqueued > 0 {
 		time.Sleep(time.Second)
 	}
 
@@ -77,7 +75,7 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 		if f.IsDir() {
 			fmt.Printf("Found directory %v in %v \n", f.Name(), filepath.Join(rootDir, branchDir))
 			// Perform another cleanDirectory call if the file is a directory and the vacuum is running in recursive mode
-			if RECURSIVE {
+			if Recursive {
 				cleanDirectory(rootDir, filepath.Join(branchDir, f.Name()), log)
 			}
 			continue
@@ -95,22 +93,28 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 		fmt.Printf("Found file %v in %v \n", fInfo.Name(), filepath.Join(rootDir, branchDir))
 
 		// Continue if the file is not old enough
-		if fInfo.ModTime().Year() > time.Now().Year()-MIN_AGE_IN_YEARS {
+		if fInfo.ModTime().Year() > time.Now().Year()-MinAgeInYears {
 			continue
 		}
 
 		// Enqueue the copy job
-		fmt.Printf("File %v in %v is older than %v years: %v", fInfo.Name(), filepath.Join(rootDir, branchDir), fmt.Sprint(MIN_AGE_IN_YEARS), fInfo.ModTime())
-		logger.LogOldFile(&fInfo, uint(MIN_AGE_IN_YEARS)-1)
-		copymachine.GetCopyMachine().EnqueueCopyJob(filepath.Join(rootDir, branchDir, fInfo.Name()), filepath.Join(TARGET_DIR, branchDir, fInfo.Name()), SHRED_ORIGINAL, copyJobFinishCallback)
+		fmt.Printf("File %v in %v is older than %v years: %v \n", fInfo.Name(), filepath.Join(rootDir, branchDir), MinAgeInYears, fInfo.ModTime())
+		logger.LogOldFile(fInfo, uint(MinAgeInYears)-1)
+		copymachine.GetCopyMachine().EnqueueCopyJob(filepath.Join(rootDir, branchDir, fInfo.Name()), filepath.Join(TargetDir, branchDir, fInfo.Name()), ShredOriginal, copyJobFinishCallback)
 		copyJobCountMutex.Lock()
-		copyJobsPlanned++
+		copyJobsEnqueued++
+
 		copyJobCountMutex.Unlock()
 	}
 
 }
 
 func copyJobFinishCallback(cj *copymachine.CopyJob) {
+
+	// Update copy jobs planned counter
+	copyJobCountMutex.Lock()
+	copyJobsEnqueued--
+	copyJobCountMutex.Unlock()
 
 	// Update statistics
 	statsMutex.Lock()
@@ -130,8 +134,9 @@ func copyJobFinishCallback(cj *copymachine.CopyJob) {
 
 		// Only shred the file if this is not a dry run
 		var err error
-		if !DRY_RUN {
-			err = shredder.Shred(*cj.FromPath)
+		if !DryRun {
+			err = os.Remove(*cj.FromPath)
+			checkAndDeleteEmptyDirectoryTree(filepath.Dir(*cj.FromPath))
 		}
 
 		// Update statistics
@@ -147,14 +152,43 @@ func copyJobFinishCallback(cj *copymachine.CopyJob) {
 		statsMutex.Unlock()
 	}
 
-	// Update copy jobs planned counter
-	copyJobCountMutex.Lock()
-	copyJobsPlanned--
-	copyJobCountMutex.Unlock()
 }
 
 func appendErrorToStatistics(err *error) {
 	statsMutex.Lock()
 	stats.Errors = append(stats.Errors, err)
 	statsMutex.Unlock()
+}
+
+func checkAndDeleteEmptyDirectoryTree(treeLeafPath string) {
+	// Check if the directory is empty after the deletion and delete it if it's empty
+	entries, err := os.ReadDir(treeLeafPath)
+	if err != nil {
+		logger.LogGenericError(err)
+	}
+
+	if len(entries) > 1 {
+		return
+	}
+
+	// Check if directory is empty or only has thumbs db (and delete thumbs db)
+	if len(entries) == 1 {
+		if entries[0].Name() != "Thumbs.db" {
+			return
+		}
+
+		err = os.Remove(filepath.Join(treeLeafPath, "Thumbs.db"))
+		if err != nil {
+			logger.LogFailedShred(treeLeafPath, err)
+			return
+		}
+	}
+
+	// Delete empty directory
+	err = os.Remove(treeLeafPath)
+	if err != nil {
+		logger.LogFailedShred(treeLeafPath, err)
+	}
+
+	checkAndDeleteEmptyDirectoryTree(filepath.Dir(treeLeafPath))
 }
