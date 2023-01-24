@@ -29,7 +29,7 @@ func (fl *FullLogger) Init() error {
 	}
 
 	// Create the log directory
-	dirName := filepath.Join("./", time.Now().String())
+	dirName := filepath.Join("./", time.Now().Format("2006-01-02_15-04-05"))
 	err := os.Mkdir(dirName, 0755)
 	if err != nil {
 		return fmt.Errorf("could not create log directory: %v", err.Error())
