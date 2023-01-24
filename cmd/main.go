@@ -38,12 +38,12 @@ func main() {
 		l = &nologger.NoLogger{}
 	}
 
-	if vacuum.MIN_AGE_IN_YEARS < 0 {
-		l.LogGenericError(fmt.Errorf("minimum age cannot be lower than 0 years! Parsed value: %v", vacuum.MIN_AGE_IN_YEARS))
+	if vacuum.MinAgeInYears < 0 {
+		l.LogGenericError(fmt.Errorf("minimum age cannot be lower than 0 years! Parsed value: %v", vacuum.MinAgeInYears))
 		os.Exit(1)
 	}
 
-	if vacuum.MIN_AGE_IN_YEARS == 0 {
+	if vacuum.MinAgeInYears == 0 {
 		fmt.Println("=====================================================================")
 		fmt.Println(">>>ATTENTION! SETTING THE MINIMUM FILE AGE TO 0 WOULD AFFECT EVERY FILE IN THE ROOT DIRECTORY!<<<")
 		fmt.Printf("===================================================================== \n\n")
@@ -82,14 +82,14 @@ func parseFlags() {
 	flag.Usage = func() {
 		showHelp()
 	}
-	flag.BoolVar(&vacuum.RECURSIVE, "r", true, "Should all subdirectories be included.")
-	flag.BoolVar(&vacuum.DRY_RUN, "dry", false, "Should the application perform a dry run without any io operations?")
-	flag.BoolVar(&vacuum.SHRED_ORIGINAL, "shred", false, "Should the original file get deleted after copy?")
-	flag.IntVar(&vacuum.MIN_AGE_IN_YEARS, "older-than", 11, "How old the last edit of a file should be (in years) to consider it for archiving.")
+	flag.BoolVar(&vacuum.Recursive, "r", true, "Should all subdirectories be included.")
+	flag.BoolVar(&vacuum.DryRun, "dry", false, "Should the application perform a dry run without any io operations?")
+	flag.BoolVar(&vacuum.ShredOriginal, "shred", false, "Should the original file get deleted after copy?")
+	flag.IntVar(&vacuum.MinAgeInYears, "older-than", 11, "How old the last edit of a file should be (in years) to consider it for archiving.")
 	flag.BoolVar(&runHelp, "help", false, "Shows usage information about this software")
 	flag.BoolVar(&noLog, "nolog", false, "If no log files should be written for the process. Use at own risk only!")
 	flag.StringVar(&rootDir, "root-dir", ">INVALID<", "The root directory which should be scanned for old files. [REQUIRED]")
-	flag.StringVar(&vacuum.TARGET_DIR, "target-dir", ">INVALID<", "The target directory where the old files should be copied to. [REQUIRED]")
+	flag.StringVar(&vacuum.TargetDir, "target-dir", ">INVALID<", "The target directory where the old files should be copied to. [REQUIRED]")
 	flag.Parse()
 }
 

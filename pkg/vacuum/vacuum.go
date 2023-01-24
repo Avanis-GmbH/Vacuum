@@ -11,9 +11,9 @@ import (
 	"github.com/Avanis-GmbH/Go-Dust-Vacuum/pkg/logging"
 )
 
-var RECURSIVE, DRY_RUN, SHRED_ORIGINAL bool
-var MIN_AGE_IN_YEARS = 11
-var TARGET_DIR string
+var Recursive, DryRun, ShredOriginal bool
+var MinAgeInYears = 11
+var TargetDir string
 
 var copyJobsEnqueued = 0
 var copyJobCountMutex sync.RWMutex
@@ -39,7 +39,7 @@ func PerformCleaning(rootDir string, log logging.Logger) *OperationStats {
 
 	logger = log
 
-	copymachine.GetCopyMachine().Dry = DRY_RUN
+	copymachine.GetCopyMachine().Dry = DryRun
 
 	// Lock the statistics object and recreate it
 	statsMutex.Lock()
@@ -75,7 +75,7 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 		if f.IsDir() {
 			fmt.Printf("Found directory %v in %v \n", f.Name(), filepath.Join(rootDir, branchDir))
 			// Perform another cleanDirectory call if the file is a directory and the vacuum is running in recursive mode
-			if RECURSIVE {
+			if Recursive {
 				cleanDirectory(rootDir, filepath.Join(branchDir, f.Name()), log)
 			}
 			continue
@@ -93,14 +93,14 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 		fmt.Printf("Found file %v in %v \n", fInfo.Name(), filepath.Join(rootDir, branchDir))
 
 		// Continue if the file is not old enough
-		if fInfo.ModTime().Year() > time.Now().Year()-MIN_AGE_IN_YEARS {
+		if fInfo.ModTime().Year() > time.Now().Year()-MinAgeInYears {
 			continue
 		}
 
 		// Enqueue the copy job
-		fmt.Printf("File %v in %v is older than %v years: %v \n", fInfo.Name(), filepath.Join(rootDir, branchDir), fmt.Sprint(MIN_AGE_IN_YEARS), fInfo.ModTime())
-		logger.LogOldFile(fInfo, uint(MIN_AGE_IN_YEARS)-1)
-		copymachine.GetCopyMachine().EnqueueCopyJob(filepath.Join(rootDir, branchDir, fInfo.Name()), filepath.Join(TARGET_DIR, branchDir, fInfo.Name()), SHRED_ORIGINAL, copyJobFinishCallback)
+		fmt.Printf("File %v in %v is older than %v years: %v \n", fInfo.Name(), filepath.Join(rootDir, branchDir), fmt.Sprint(MinAgeInYears), fInfo.ModTime())
+		logger.LogOldFile(fInfo, uint(MinAgeInYears)-1)
+		copymachine.GetCopyMachine().EnqueueCopyJob(filepath.Join(rootDir, branchDir, fInfo.Name()), filepath.Join(TargetDir, branchDir, fInfo.Name()), ShredOriginal, copyJobFinishCallback)
 		copyJobCountMutex.Lock()
 		copyJobsEnqueued++
 		fmt.Println(fmt.Sprint(copyJobsEnqueued))
@@ -135,7 +135,7 @@ func copyJobFinishCallback(cj *copymachine.CopyJob) {
 
 		// Only shred the file if this is not a dry run
 		var err error
-		if !DRY_RUN {
+		if !DryRun {
 			err = os.Remove(*cj.FromPath)
 			checkAndDeleteEmptyDirectoryTree(filepath.Dir(*cj.FromPath))
 		}
