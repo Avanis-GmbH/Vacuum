@@ -83,7 +83,7 @@ func parseFlags() {
 	flag.Usage = func() {
 		showHelp()
 	}
-	flag.BoolVar(&vacuum.Recursive, "r", true, "Should all subdirectories be included.")
+	flag.BoolVar(&vacuum.Recursive, "r", false, "Should all subdirectories be included.")
 	flag.BoolVar(&vacuum.DryRun, "dry", false, "Should the application perform a dry run without any io operations?")
 	flag.BoolVar(&vacuum.ShredOriginal, "shred", false, "Should the original file get deleted after copy?")
 	flag.IntVar(&vacuum.MinAgeInYears, "older-than", 11, "How old the last edit of a file should be (in years) to consider it for archiving.")
