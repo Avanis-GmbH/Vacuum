@@ -29,7 +29,7 @@ func (fl *FullLogger) Init() error {
 	}
 
 	// Create the log directory
-	dirName := "./" + fmt.Sprint(time.Now().Unix())
+	dirName := filepath.Join("./", time.Now().String())
 	err := os.Mkdir(dirName, 0755)
 	if err != nil {
 		return fmt.Errorf("could not create log directory: %v", err.Error())
@@ -76,7 +76,7 @@ func (fl *FullLogger) LogOldFile(f os.FileInfo, maxAgeInYears uint) {
 		return
 	}
 
-	_, err := fl.oldFileLog.WriteString(fmt.Sprint("Found file ", f.Name(), " being older than ", maxAgeInYears, " years \n"))
+	_, err := fl.oldFileLog.WriteString(fmt.Sprintf("Found file %v being older than %v years \n", f.Name(), maxAgeInYears))
 	if err != nil {
 		fmt.Println("Could not write to old file log: " + err.Error())
 	}
@@ -88,7 +88,7 @@ func (fl *FullLogger) LogCopiedFile(originPath, copyPath string, copiedBytes uin
 		return
 	}
 
-	_, err := fl.copiedFileLog.WriteString(fmt.Sprint("Copied ", copiedBytes, " bytes from ", originPath, " to ", copyPath, "\n"))
+	_, err := fl.copiedFileLog.WriteString(fmt.Sprintf("Copied %v bytes from %v to %v \n", copiedBytes, originPath, copyPath))
 	if err != nil {
 		fmt.Println("Could not write to copied file log: " + err.Error())
 	}
