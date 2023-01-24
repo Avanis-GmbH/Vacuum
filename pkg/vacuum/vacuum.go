@@ -98,12 +98,12 @@ func cleanDirectory(rootDir, branchDir string, log logging.Logger) {
 		}
 
 		// Enqueue the copy job
-		fmt.Printf("File %v in %v is older than %v years: %v \n", fInfo.Name(), filepath.Join(rootDir, branchDir), fmt.Sprint(MinAgeInYears), fInfo.ModTime())
+		fmt.Printf("File %v in %v is older than %v years: %v \n", fInfo.Name(), filepath.Join(rootDir, branchDir), MinAgeInYears, fInfo.ModTime())
 		logger.LogOldFile(fInfo, uint(MinAgeInYears)-1)
 		copymachine.GetCopyMachine().EnqueueCopyJob(filepath.Join(rootDir, branchDir, fInfo.Name()), filepath.Join(TargetDir, branchDir, fInfo.Name()), ShredOriginal, copyJobFinishCallback)
 		copyJobCountMutex.Lock()
 		copyJobsEnqueued++
-		fmt.Printf("%v\n", copyJobsEnqueued)
+
 		copyJobCountMutex.Unlock()
 	}
 
@@ -114,7 +114,6 @@ func copyJobFinishCallback(cj *copymachine.CopyJob) {
 	// Update copy jobs planned counter
 	copyJobCountMutex.Lock()
 	copyJobsEnqueued--
-	fmt.Printf("%v\n", copyJobsEnqueued)
 	copyJobCountMutex.Unlock()
 
 	// Update statistics
