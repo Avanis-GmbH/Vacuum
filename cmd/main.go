@@ -46,7 +46,7 @@ func main() {
 	if vacuum.MinAgeInYears == 0 {
 		fmt.Println("=====================================================================")
 		fmt.Println(">>>ATTENTION! SETTING THE MINIMUM FILE AGE TO 0 WOULD AFFECT EVERY FILE IN THE ROOT DIRECTORY!<<<")
-		fmt.Printf("===================================================================== \n\n")
+		fmt.Println("=====================================================================")
 		fmt.Println("Do you want to continue? (Type 'yes' to continue. Any other input will exit the software)")
 		var answer string
 		_, err := fmt.Scanln(&answer)
@@ -56,6 +56,7 @@ func main() {
 
 		if strings.TrimSpace(answer) != "yes" {
 			fmt.Println("Aborted!")
+			os.Exit(0)
 		}
 
 		fmt.Println("Continuing despite warning...")
