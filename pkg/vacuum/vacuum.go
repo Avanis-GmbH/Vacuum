@@ -114,7 +114,7 @@ func copyJobFinishCallback(cj *copymachine.CopyJob) {
 	// Update copy jobs planned counter
 	copyJobCountMutex.Lock()
 	copyJobsEnqueued--
-	fmt.Println(fmt.Sprint(copyJobsEnqueued))
+	fmt.Printf("%v\n", copyJobsEnqueued)
 	copyJobCountMutex.Unlock()
 
 	// Update statistics
