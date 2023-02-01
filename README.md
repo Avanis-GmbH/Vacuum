@@ -15,7 +15,7 @@ Additional flags:
         Shows usage information about this software
   -nolog
         If no log files should be written for the process. Use at own risk only!
-  -older-than int
+  -min-age int
         How old the last edit of a file should be (in years) to consider it for archiving. (default 11)
   -r    Should all subdirectories be included. (default true)
   -shred
