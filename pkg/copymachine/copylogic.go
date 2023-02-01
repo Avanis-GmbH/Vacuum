@@ -9,8 +9,8 @@ import (
 
 func (cm *CopyMachine) copyQueueMasterRoutine() {
 	cm.running = true
-	cm.copyJobStackMutes.Lock()
-	defer cm.copyJobStackMutes.Unlock()
+	cm.copyJobStackMutex.Lock()
+	hasLock := true
 
 	for len(cm.copyJobs) > 0 {
 		cj := cm.copyJobs[0]
@@ -23,9 +23,18 @@ func (cm *CopyMachine) copyQueueMasterRoutine() {
 			cm.copyJobs = cm.copyJobs[:len(cm.copyJobs)-1]
 		}
 
+		cm.copyJobStackMutex.Unlock()
+		hasLock = false
 		cm.performCopyJob(cj)
+
+		cm.copyJobStackMutex.Lock()
+		hasLock = true
 	}
 
+	if hasLock {
+		cm.copyJobStackMutex.Unlock()
+		hasLock = false
+	}
 	cm.running = false
 }
 

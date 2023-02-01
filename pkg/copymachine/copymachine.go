@@ -6,7 +6,7 @@ import (
 
 type CopyMachine struct {
 	copyJobs          []*CopyJob
-	copyJobStackMutes sync.Mutex
+	copyJobStackMutex sync.Mutex
 	running           bool
 	Dry               bool
 }
@@ -46,8 +46,8 @@ func (qm *CopyMachine) EnqueueCopyJob(originalFullPath, copyFullPath string, shr
 	}
 
 	// Append copy job to copy job stack
-	qm.copyJobStackMutes.Lock()
-	defer qm.copyJobStackMutes.Unlock()
+	qm.copyJobStackMutex.Lock()
+	defer qm.copyJobStackMutex.Unlock()
 	qm.copyJobs = append(qm.copyJobs, cj)
 
 	// Start the queuemaster if it's not running
