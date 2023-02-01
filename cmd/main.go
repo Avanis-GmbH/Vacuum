@@ -12,7 +12,7 @@ import (
 	"github.com/Avanis-GmbH/Go-Dust-Vacuum/pkg/vacuum"
 )
 
-const VERSION = "1.0.0-beta"
+const VERSION = "1.0.1-beta"
 
 var runHelp bool
 var rootDir string

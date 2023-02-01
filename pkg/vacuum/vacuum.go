@@ -121,8 +121,10 @@ func copyJobFinishCallback(cj *copymachine.CopyJob) {
 
 	if cj.CopyError != nil {
 		stats.Errors = append(stats.Errors, cj.CopyError)
+		fmt.Printf("Failed copyjob from %v to %v\n", *cj.FromPath, *cj.ToPath)
 		logger.LogFailedCopy(*cj.FromPath, *cj.ToPath, *cj.CopyError)
 	} else {
+		fmt.Printf("Finished copyjob from %v to %v | Copied %v bytes\n", *cj.FromPath, *cj.ToPath, cj.CopiedBytes)
 		stats.CopiedBytes += cj.CopiedBytes
 		stats.CopiedFiles++
 		logger.LogCopiedFile(*cj.FromPath, *cj.ToPath, cj.CopiedBytes)
@@ -132,6 +134,7 @@ func copyJobFinishCallback(cj *copymachine.CopyJob) {
 	// Shred original if enabled
 	if cj.ShredOnFinish && cj.CopyError == nil {
 
+		fmt.Printf("Shredding file %v \n", *cj.FromPath)
 		// Only shred the file if this is not a dry run
 		var err error
 		if !DryRun {
@@ -143,9 +146,11 @@ func copyJobFinishCallback(cj *copymachine.CopyJob) {
 		statsMutex.Lock()
 		if err != nil {
 			stats.Errors = append(stats.Errors, &err)
+			fmt.Printf("Failed to shred file %v \n", *cj.FromPath)
 			logger.LogFailedShred(*cj.FromPath, err)
 		} else {
 			stats.DeletedFiles++
+			fmt.Printf("Shredded file %v \n", *cj.FromPath)
 			logger.LogShreddedFile(*cj.FromPath)
 		}
 
