@@ -16,13 +16,13 @@ Vacuum is a powerful command-line tool designed to help you efficiently move old
 
 ## 🔧 Basic Usage
 
-```
+```bash
 vacuum -root-dir=<source directory> -target-dir=<target directory> [options]
 ```
 
 Example:
 
-```
+```bash
 vacuum -root-dir=/home/user/documents -target-dir=/archive/documents -min-age=5 -shred
 ```
 
@@ -47,24 +47,25 @@ vacuum -root-dir=/home/user/documents -target-dir=/archive/documents -min-age=5 
 
 1. **Dry Run**: Simulate the process without moving any files.
 
-   ```
+   ```bash
    vacuum -root-dir=/path/to/source -target-dir=/path/to/target -dry
    ```
 
 2. **Archiving Files Older than 5 Years**:
 
-   ```
+   ```bash
    vacuum -root-dir=/path/to/source -target-dir=/path/to/target -min-age=5
    ```
 
 3. **Move and Shred**: Archive and securely delete original files.
 
-   ```
+   ```bash
    vacuum -root-dir=/path/to/source -target-dir=/path/to/target -min-age=3 -shred
    ```
 
 4. **Disable Logging**:
-   ```
+
+   ```bash
    vacuum -root-dir=/path/to/source -target-dir=/path/to/target -nolog
    ```
 
