@@ -9,31 +9,16 @@ import (
 
 func (cm *CopyMachine) copyQueueMasterRoutine() {
 	cm.running = true
-	cm.copyJobStackMutex.Lock()
-	hasLock := true
-
-	for len(cm.copyJobs) > 0 {
-		cj := cm.copyJobs[0]
-
-		if len(cm.copyJobs) == 1 {
-			cm.copyJobs = make([]*CopyJob, 0)
-		} else {
-			cm.copyJobs[0] = cm.copyJobs[len(cm.copyJobs)-1]
-			cm.copyJobs[len(cm.copyJobs)-1] = nil
-			cm.copyJobs = cm.copyJobs[:len(cm.copyJobs)-1]
-		}
-
-		cm.copyJobStackMutex.Unlock()
-		hasLock = false
-		cm.performCopyJob(cj)
-
+	for {
 		cm.copyJobStackMutex.Lock()
-		hasLock = true
-	}
-
-	if hasLock {
+		if len(cm.copyJobs) == 0 {
+			cm.copyJobStackMutex.Unlock()
+			break
+		}
+		cj := cm.copyJobs[0]
+		cm.copyJobs = cm.copyJobs[1:]
 		cm.copyJobStackMutex.Unlock()
-		hasLock = false
+		cm.performCopyJob(cj)
 	}
 	cm.running = false
 }
@@ -44,7 +29,6 @@ func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
 		cj.FinishCallBack(cj)
 		return
 	}
-
 	// Create the target directory if it does not exist
 	err := os.MkdirAll(filepath.Dir(*cj.ToPath), 0666)
 	if err != nil {
@@ -52,7 +36,6 @@ func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
 		cj.FinishCallBack(cj)
 		return
 	}
-
 	// Open the source file
 	sourceF, err := os.Open(*cj.FromPath)
 	if err != nil {
@@ -61,7 +44,6 @@ func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
 		return
 	}
 	defer sourceF.Close()
-
 	// Create the destination file if not exist
 	destF, err := os.Create(*cj.ToPath)
 	if err != nil {
@@ -70,7 +52,6 @@ func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
 		return
 	}
 	defer destF.Close()
-
 	// Copy the file content
 	copBytes, err := io.Copy(destF, sourceF)
 	if err != nil {
@@ -80,18 +61,15 @@ func (cm *CopyMachine) performCopyJob(cj *CopyJob) {
 		return
 	}
 	cj.CopiedBytes = uint64(copBytes)
-
 	// Finalize the copy job
 	err = destF.Sync()
 	if err != nil {
 		cj.CopyError = &err
 	}
-
 	// Close the source file
 	err = sourceF.Close()
 	if err != nil {
 		fmt.Printf("Error while closing file after copy: %v \n", err.Error())
 	}
-
 	cj.FinishCallBack(cj)
 }
