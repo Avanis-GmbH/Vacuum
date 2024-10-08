@@ -6,6 +6,9 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      gomod:
+        dependency-type: "production"
     target-branch: "dependencies"
     assignees:
       - "Plaenkler"
