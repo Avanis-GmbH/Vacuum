@@ -1,3 +1,3 @@
-module github.com/Avanis-GmbH/Go-Dust-Vacuum
+module github.com/Avanis-GmbH/Vacuum
 
-go 1.19
+go 1.22
