@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -20,9 +19,12 @@ const (
 )
 
 var (
-	dry, shred, recurse bool
-	source, target      string
-	age                 int
+	source  string
+	target  string
+	age     int
+	dry     bool
+	shred   bool
+	recurse bool
 )
 
 func init() {
@@ -35,119 +37,111 @@ func init() {
 }
 
 func main() {
-	err := validateFlags()
+	err := processFlags()
 	if err != nil {
 		log.Fatal(err)
+	}
+	err = filepath.Walk(source, processEntry)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func processFlags() error {
+	flag.Parse()
+	if source == "" {
+		flag.Usage()
+		return fmt.Errorf("source directory is required")
+	}
+	if target == "" {
+		flag.Usage()
+		return fmt.Errorf("target directory is required")
+	}
+	stat, err := os.Stat(source)
+	if err != nil {
+		return err
+	}
+	if !stat.IsDir() {
+		return fmt.Errorf("source is not a directory")
+	}
+	stat, err = os.Stat(target)
+	if err != nil {
+		return err
+	}
+	if !stat.IsDir() {
+		return fmt.Errorf("target is not a directory")
+	}
+	if age <= 0 {
+		return fmt.Errorf("age must be a positive integer")
+	}
+	if dry {
+		fmt.Println("dry run enabled no files will be moved")
+	}
+	return nil
+}
+
+func processEntry(path string, info os.FileInfo, err error) error {
+	if err != nil {
+		fmt.Printf("error accessing path %s: %v\n", path, err)
+		return nil
+	}
+	if info.IsDir() && !recurse && path != source {
+		return filepath.SkipDir
+	}
+	if info.ModTime().Before(time.Now().AddDate(-age, 0, 0)) {
+		processFile(path)
+	}
+	return nil
+}
+
+func processFile(path string) {
+	relPath, err := filepath.Rel(source, path)
+	if err != nil {
+		fmt.Printf("error determining relative path for %s: %v\n", path, err)
 		return
 	}
-	process(source)
-}
-
-func validateFlags() error {
-	flag.Parse()
-	if source == "" || target == "" {
-		flag.Usage()
-		return fmt.Errorf("missing required parameters")
-	}
-	err := checkDirectory(source, "source")
-	if err != nil {
-		return err
-	}
-	err = checkDirectory(target, "target")
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func checkDirectory(path string, name string) error {
-	dirInfo, err := os.Stat(path)
-	if os.IsNotExist(err) || !dirInfo.IsDir() {
-		return fmt.Errorf("invalid %s directory", name)
-	}
-	testFile := filepath.Join(path, "test")
-	err = os.WriteFile(testFile, []byte("test"), 0644)
-	if err != nil {
-		return fmt.Errorf("unwritable %s directory", name)
-	}
-	os.Remove(testFile)
-	return nil
-}
-
-func process(dir string) {
-	files, err := os.ReadDir(dir)
-	if err != nil {
-		log.Printf("error reading directory: %s\n", dir)
-	}
-	for _, file := range files {
-		path := filepath.Join(dir, file.Name())
-		if file.IsDir() {
-			if !recurse {
-				continue
-			}
-			go process(path)
-		}
-		if !shouldProcessFile(file, path) {
-			continue
-		}
-		err := handleFile(path)
-		if err != nil {
-			log.Printf("error handling file: %s\n", path)
-		}
-	}
-}
-
-func shouldProcessFile(file os.DirEntry, path string) bool {
-	fileInfo, err := file.Info()
-	if err != nil {
-		log.Printf("error getting file info: %s\n", path)
-		return false
-	}
-	return time.Since(fileInfo.ModTime()) >= time.Duration(age*365*24)*time.Hour
-}
-
-func handleFile(path string) error {
-	targetPath := filepath.Join(target, strings.TrimPrefix(path, source))
+	targetPath := filepath.Join(target, relPath)
 	if dry {
-		fmt.Printf("moving file: %s to %s\n", path, targetPath)
-		return nil
+		fmt.Printf("dry: would archive file: %s to %s\n", path, targetPath)
+		return
 	}
-	err := moveFile(path, targetPath)
+	err = os.MkdirAll(filepath.Dir(targetPath), os.ModePerm)
 	if err != nil {
-		return fmt.Errorf("error moving file: %w", err)
+		fmt.Printf("error creating target directory for %s: %v\n", targetPath, err)
+		return
 	}
+	err = copyFile(path, targetPath)
+	if err != nil {
+		fmt.Printf("error copying file %s to %s: %v\n", path, targetPath, err)
+		return
+	}
+	fmt.Printf("archived file: %s to %s\n", path, targetPath)
 	if !shred {
-		return nil
+		return
 	}
-	err = shredFile(path)
+	err = os.Remove(path)
 	if err != nil {
-		return fmt.Errorf("error shredding file: %w", err)
+		fmt.Printf("error deleting original file %s: %v\n", path, err)
+		return
 	}
-	return nil
+	fmt.Printf("deleted original file: %s\n", path)
 }
 
-func moveFile(src, dst string) error {
-	err := os.MkdirAll(filepath.Dir(dst), os.ModePerm)
+func copyFile(src, dst string) error {
+	srcFile, err := os.Open(src)
 	if err != nil {
 		return err
 	}
-	input, err := os.ReadFile(src)
+	defer srcFile.Close()
+	dstFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(dst, input, 0644)
+	defer dstFile.Close()
+	_, err = srcFile.Stat()
 	if err != nil {
 		return err
 	}
-	log.Printf("file moved from %s to %s\n", src, dst)
-	return nil
-}
-
-func shredFile(path string) error {
-	err := os.Remove(path)
-	if err != nil {
-		return err
-	}
-	log.Printf("shredded %s\n", path)
-	return nil
+	_, err = dstFile.ReadFrom(srcFile)
+	return err
 }
