@@ -16,7 +16,7 @@ Vacuum is a powerful command-line tool designed to help you efficiently move old
 ## 🔧 Basic Usage
 
 ```bash
-vacuum -source=<source directory> -target=<target directory> [options]
+vacuum -source=<source directory> -target=<target directory> -age=<age in years> [options]
 ```
 
 Example:
@@ -29,14 +29,14 @@ vacuum -source=/home/user/documents -target=/archive/documents -age=5 -shred
 
 ## 📚 Command-Line Options
 
-| Flag          | Description                                                        |
-| ------------- | ------------------------------------------------------------------ |
-| `-source`     | Path to the source directory from which files will be moved.       |
-| `-target`     | Path to the target directory where files will be archived.         |
-| `-dry`        | Perform a dry run without executing any file operations.           |
-| `-shred`      | Delete the original file after copying it to the target directory. |
-| `-recurse`    | Recursively include all subdirectories.                            |
-| `-age`        | Minimum file age in years to consider for archiving.               |
+| Flag       | Description                                                        |
+| ---------- | ------------------------------------------------------------------ |
+| `-source`  | Path to the source directory from which files will be moved.       |
+| `-target`  | Path to the target directory where files will be archived.         |
+| `-dry`     | Perform a dry run without executing any file operations.           |
+| `-shred`   | Delete the original file after copying it to the target directory. |
+| `-recurse` | Recursively include all subdirectories.                            |
+| `-age`     | Minimum file age in years to consider for archiving.               |
 
 ---
 
@@ -45,7 +45,7 @@ vacuum -source=/home/user/documents -target=/archive/documents -age=5 -shred
 1. **Dry Run**: Simulate the process without moving any files.
 
    ```bash
-   vacuum -source=/path/to/source -target=/path/to/target -dry
+   vacuum -source=/path/to/source -target=/path/to/target -age=1 -dry
    ```
 
 2. **Archiving Files Older than 5 Years**:
@@ -63,7 +63,7 @@ vacuum -source=/home/user/documents -target=/archive/documents -age=5 -shred
 4. **Recursively Include Subdirectories**:
 
    ```bash
-   vacuum -source=/path/to/source -target=/path/to/target -recurse
+   vacuum -source=/path/to/source -target=/path/to/target -age=1 -recurse
    ```
 
 ---
