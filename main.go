@@ -49,13 +49,8 @@ func main() {
 
 func processFlags() error {
 	flag.Parse()
-	if source == "" {
-		flag.Usage()
-		return fmt.Errorf("source directory is required")
-	}
-	if target == "" {
-		flag.Usage()
-		return fmt.Errorf("target directory is required")
+	if source == target {
+		return fmt.Errorf("source & target must be different")
 	}
 	stat, err := os.Stat(source)
 	if err != nil {
