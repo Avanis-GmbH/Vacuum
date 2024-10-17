@@ -18,6 +18,12 @@ const (
 	ExplainAge     = "Minimum file age in years to consider for archiving."
 )
 
+type stats struct {
+	archived uint
+	errors   uint
+	deleted  uint
+}
+
 var (
 	source  string
 	target  string
@@ -25,6 +31,7 @@ var (
 	dry     bool
 	shred   bool
 	recurse bool
+	result  stats
 )
 
 func init() {
@@ -45,6 +52,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("archived:", result.archived)
+	fmt.Println("errors:", result.errors)
+	fmt.Println("deleted:", result.deleted)
 }
 
 func processFlags() error {
@@ -83,6 +93,7 @@ func processFlags() error {
 func processEntry(path string, info os.FileInfo, err error) error {
 	if err != nil {
 		fmt.Printf("error accessing path %s: %v\n", path, err)
+		result.errors++
 		return nil
 	}
 	if info.IsDir() && !recurse && path != source {
@@ -98,33 +109,40 @@ func processFile(path string) {
 	relPath, err := filepath.Rel(source, path)
 	if err != nil {
 		fmt.Printf("error determining relative path for %s: %v\n", path, err)
+		result.errors++
 		return
 	}
 	targetPath := filepath.Join(target, relPath)
 	if dry {
 		fmt.Printf("dry: would archive file: %s to %s\n", path, targetPath)
+		result.archived++
 		return
 	}
 	err = os.MkdirAll(filepath.Dir(targetPath), os.ModePerm)
 	if err != nil {
 		fmt.Printf("error creating target directory for %s: %v\n", targetPath, err)
+		result.errors++
 		return
 	}
 	err = copyFile(path, targetPath)
 	if err != nil {
 		fmt.Printf("error copying file %s to %s: %v\n", path, targetPath, err)
+		result.errors++
 		return
 	}
 	fmt.Printf("archived file: %s to %s\n", path, targetPath)
+	result.archived++
 	if !shred {
 		return
 	}
 	err = os.Remove(path)
 	if err != nil {
 		fmt.Printf("error deleting original file %s: %v\n", path, err)
+		result.errors++
 		return
 	}
 	fmt.Printf("deleted original file: %s\n", path)
+	result.deleted++
 }
 
 func copyFile(src, dst string) error {
