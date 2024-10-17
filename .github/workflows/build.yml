@@ -21,4 +21,4 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: linux
         goarch: amd64
-        binary_name: "Vacuum"
+        binary_name: "vacuum"
